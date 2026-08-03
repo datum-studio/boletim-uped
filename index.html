@@ -379,20 +379,60 @@
     font-size:8px; font-weight:600; color:#2F8F5B;
     text-transform:uppercase; letter-spacing:.03em;
   }
-  .prod-tipo-leito-itens{ display:grid; grid-template-columns:repeat(4,1fr); gap:2px; }
+  /* Duas metades lado a lado: esquerda = Internamentos por Tipo de Leito,
+     direita = Motivo das Saídas (novo). Mesmo orçamento de altura de antes —
+     a largura de cada item é que diminui, por isso o grid da esquerda passa
+     de 4 colunas para 2x2 (mais espaço por número, permitindo aumentá-los). */
+  .prod-tipo-leito-row{ display:grid; grid-template-columns:1fr 1fr; align-items:start; gap:0 14px; }
+  .prod-tipo-leito-col{ min-width:0; }
+  .prod-tipo-leito-col-dir{ border-left:1px solid #D9EDE1; padding-left:14px; }
+  .prod-tipo-leito-col-vazio{
+    font-size:7.3px; color:var(--texto-suave); font-style:italic; padding-top:2px;
+  }
+  .prod-tipo-leito-col-esq .prod-tipo-leito-itens{
+    display:grid; grid-template-columns:repeat(2,1fr); gap:5px 4px;
+  }
   .prod-tipo-leito-item{ padding:0 4px; text-align:center; }
-  .prod-tipo-leito-item + .prod-tipo-leito-item{ border-left:1px solid #D9EDE1; }
+  .prod-tipo-leito-item{ border-left:none; }
+  .prod-tipo-leito-item:nth-child(2n){ border-left:1px solid #D9EDE1; }
   .prod-tipo-leito-item .n{
-    font-size:25px; font-weight:800; color:#2F8F5B; font-family:var(--font-display); line-height:1;
+    font-size:28px; font-weight:800; color:#2F8F5B; font-family:var(--font-display); line-height:1;
   }
   .prod-tipo-leito-item .lbl{
     font-size:7px; font-weight:600; color:var(--texto-suave);
     text-transform:uppercase; letter-spacing:.02em; margin-top:1px;
   }
+  /* Motivo das Saídas — KPI visual em mini barras horizontais, estilo
+     dashboard executivo: rótulo + barra espessa + percentual, uma linha
+     por categoria. Tamanhos maiores aqui (tela) para leitura imediata;
+     impressão e mobile mantêm suas próprias regras, mais compactas. */
+  .prod-motivo-itens{ display:flex; flex-direction:column; justify-content:center; gap:9px; height:100%; }
+  .prod-motivo-item{ display:flex; align-items:center; gap:9px; }
+  .prod-motivo-lbl{
+    font-size:12px; font-weight:700; color:var(--texto-suave);
+    text-transform:uppercase; letter-spacing:.01em; width:110px; flex-shrink:0;
+    white-space:nowrap;
+  }
+  .prod-motivo-bar-track{
+    flex:1; height:11px; background:#E3F1E9; border-radius:5px; overflow:hidden;
+  }
+  .prod-motivo-bar-fill{ height:100%; border-radius:5px; }
+  .prod-motivo-pct{
+    font-size:14px; font-weight:800; font-family:var(--font-display);
+    width:46px; text-align:right; flex-shrink:0;
+  }
   @media(max-width:560px){
-    .prod-tipo-leito-itens{ grid-template-columns:repeat(2,1fr); gap:8px 4px; }
-    .prod-tipo-leito-item{ border-left:none; }
-    .prod-tipo-leito-item:nth-child(2n){ border-left:1px solid #D9EDE1; }
+    .prod-tipo-leito-row{ grid-template-columns:1fr; gap:10px 0; }
+    .prod-tipo-leito-col-dir{ border-left:none; padding-left:0; border-top:1px solid #D9EDE1; padding-top:8px; }
+    .prod-tipo-leito-col-esq .prod-tipo-leito-itens{ grid-template-columns:repeat(4,1fr); gap:2px; }
+    .prod-tipo-leito-item:nth-child(2n){ border-left:none; }
+    .prod-tipo-leito-item + .prod-tipo-leito-item{ border-left:1px solid #D9EDE1; }
+    .prod-tipo-leito-item .n{ font-size:22px; }
+    .prod-motivo-itens{ gap:4px; }
+    .prod-motivo-item{ gap:6px; }
+    .prod-motivo-lbl{ font-size:7px; width:56px; }
+    .prod-motivo-bar-track{ height:7px; }
+    .prod-motivo-pct{ font-size:11px; width:30px; }
   }
   .prod-card{
     background:#fff; border:1.5px solid #D6EEE0; border-radius:10px;
@@ -655,7 +695,7 @@
     .boletim{ max-width:100%; }
     .footer-actions{ display:none; }
     .section, .header-wrap{ break-inside:avoid; page-break-inside:avoid; box-shadow:none; }
-    .header-wrap{ margin-bottom:6px; padding-bottom:6px; }
+    .header-wrap{ margin-bottom:4px; padding-bottom:4px; }
     .header{ padding:6px 12px 0; }
     .header h1 .linha1{ font-size:34px; }
     .header h1 .linha2{ font-size:16px; }
@@ -674,7 +714,7 @@
     .section{ border:1px solid var(--borda); margin-bottom:6px; padding:0; border-radius:10px; }
     .section-title{ font-size:9.5px; padding:5px 12px; }
     .section-body{ padding:8px 12px; }
-    .indicadores-panel{ border-width:1px; border-radius:10px; margin-bottom:6px; }
+    .indicadores-panel{ border-width:1px; border-radius:10px; margin-bottom:4px; }
     .indicadores-tab{ font-size:10px; padding:5px 12px; border-radius:0 0 10px 0; }
     .indicadores-panel .kpi-grid{ grid-template-columns:repeat(6,1fr); gap:4px; padding:8px 8px 10px; }
     .kpi .kpi-ico{ width:30px; height:30px; overflow:hidden; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
@@ -685,10 +725,10 @@
     .kpi .kpi-compare{ font-size:6.5px; margin-top:2px; }
     .kpi .kpi-var-box{ padding:2px 4px; border-width:1px; border-radius:4px; width:calc(100% - 6px); margin-top:1px; }
     .kpi .kpi-var{ font-size:7px; }
-    .cenario-alerta-row{ gap:6px; margin-bottom:6px; }
+    .cenario-alerta-row{ gap:6px; margin-bottom:4px; }
     .cenario-panel{ border-width:1px; border-radius:10px; }
     .cenario-tab{ font-size:10px; padding:5px 12px; border-radius:0 0 10px 0; }
-    .cenario-body{ padding:6px 7px 5px; }
+    .cenario-body{ padding:5px 7px 4px; }
     .cenario-viral-row{ grid-template-columns:1.5fr 1fr; padding-bottom:5px; margin-bottom:6px; }
     .cenario-viral-item.secundario{ padding-left:8px; margin-left:2px; }
     .cenario-viral-item .c-ico{ width:16px; height:16px; }
@@ -714,15 +754,15 @@
     .alerta-header{ padding:5px 8px 5px 8px; font-size:10px; gap:5px; }
     .alerta-sino{ width:20px; height:20px; }
     .alerta-sino svg{ width:12px; height:12px; }
-    .alerta-body{ padding:5px 8px; min-height:0; }
+    .alerta-body{ padding:4px 8px; min-height:0; }
     .alerta-box .titulo{ font-size:10px; }
     .alerta-box li{ font-size:9.3px; margin-bottom:1px; }
     .mascote-alerta{ height:79px; width:auto; }
     .alerta-content{ padding-right:64px; }
     .alerta-mascote-wrap{ right:6px; bottom:8px; }
-    .dash-panel{ border-width:1px; border-radius:10px; break-inside:avoid; margin-bottom:6px; }
+    .dash-panel{ border-width:1px; border-radius:10px; break-inside:avoid; margin-bottom:4px; }
     .dash-tab{ font-size:10px; padding:5px 12px; border-radius:0 0 10px 0; }
-    .dash-body{ padding:6px 10px 8px; }
+    .dash-body{ padding:5px 10px 7px; }
     .dash-grid{ grid-template-columns:1fr 1fr 1fr; width:100%; table-layout:fixed; }
     .dash-col{ padding:0 6px; min-width:0; overflow:hidden; }
     .chart-title{ font-size:8.2px; margin-bottom:2px; }
@@ -734,17 +774,25 @@
     .donut-legend{ gap:3px; }
     .donut-legend span{ font-size:7px; gap:4px; }
     .donut-legend i{ width:7px; height:7px; }
-    .prod-panel{ border-width:1px; border-radius:10px; margin-bottom:6px; }
+    .prod-panel{ border-width:1px; border-radius:10px; margin-bottom:4px; }
     .prod-tab{ font-size:10px; padding:5px 14px; border-radius:0 0 10px 0; }
-    .prod-body{ padding:5px 8px 6px; }
+    .prod-body{ padding:3px 8px 4px; }
     .prod-grid{ grid-template-columns:repeat(8,1fr); gap:4px; }
-    .prod-tipo-leito{ margin-top:3px; padding:3px 4px 2px; border-radius:5px; }
-    .prod-tipo-leito-header{ margin-bottom:2px; gap:3px; }
+    .prod-tipo-leito{ margin-top:1px; padding:1px 4px 1px; border-radius:5px; }
+    .prod-tipo-leito-header{ margin-bottom:1px; gap:3px; }
     .prod-tipo-leito-header svg{ width:8px; height:8px; }
-    .prod-tipo-leito-titulo{ font-size:6.8px; }
-    .prod-tipo-leito-itens{ gap:1px; }
+    .prod-tipo-leito-titulo{ font-size:6.8px; line-height:1; }
+    .prod-tipo-leito-row{ gap:0 8px; }
+    .prod-tipo-leito-col-dir{ padding-left:8px; }
+    .prod-tipo-leito-col-vazio{ font-size:5.6px; }
+    .prod-tipo-leito-col-esq .prod-tipo-leito-itens{ grid-template-columns:repeat(4,1fr); gap:1px; }
     .prod-tipo-leito-item .n{ font-size:9.5px; }
-    .prod-tipo-leito-item .lbl{ font-size:5.8px; font-weight:600; margin-top:0.5px; }
+    .prod-tipo-leito-item .lbl{ font-size:5.8px; font-weight:600; margin-top:0.5px; line-height:1; }
+    .prod-motivo-itens{ gap:1px; }
+    .prod-motivo-item{ gap:3px; }
+    .prod-motivo-lbl{ font-size:5.4px; width:36px; line-height:1; }
+    .prod-motivo-bar-track{ height:3px; }
+    .prod-motivo-pct{ font-size:7.5px; width:18px; line-height:1; }
     .prod-card{ padding:5px 3px 4px; border-radius:7px; border-width:1px; gap:2px; }
     .prod-card .prod-ico{ width:18px; height:18px; }
     .prod-card .prod-ico svg{ width:18px !important; height:18px !important; }
@@ -753,10 +801,10 @@
     .prod-card .prod-note{ font-size:6.5px; }
     .mascote-header{ height:80px; object-fit:contain; align-self:flex-end; margin:0 0 -4px 0; }
     /* comp+dest lado a lado na impressão */
-    .comp-dest-row{ gap:6px; margin-bottom:6px; flex-wrap:nowrap; break-inside:avoid; }
+    .comp-dest-row{ gap:6px; margin-bottom:2px; flex-wrap:nowrap; break-inside:avoid; }
     .comp-panel{ border-width:1px; border-radius:10px; }
     .comp-tab{ font-size:10px; padding:5px 12px; border-radius:0 0 10px 0; }
-    .comp-body{ padding:3px 7px 5px; }
+    .comp-body{ padding:2px 7px 4px; }
     table.comparativo{ line-height:1.2; }
     table.comparativo th{ padding:2.5px 4px; font-size:8.8px; }
     table.comparativo td{ padding:2px 4px; font-size:8.6px; }
@@ -764,7 +812,7 @@
     .dest-panel{ border-width:1px; border-radius:10px; }
     .dest-tab{ font-size:10px; padding:5px 12px; border-radius:0 0 10px 0; gap:5px; }
     .dest-tab svg{ width:9px !important; height:9px !important; }
-    .dest-body{ padding:3px 7px 5px; }
+    .dest-body{ padding:2px 7px 4px; }
     .comp-mascotes{ min-height:0; margin-top:2px; }
     .dest-lines-wrap{ min-height:0; }
     .dest-mascote-wrap{ min-height:0; margin-top:2px; }
@@ -778,7 +826,7 @@
        Ondas + faixa saem do fluxo normal (absolute) para não serem
        tratadas como caixas fragmentáveis separadas na paginação. */
     .footer-boletim{
-      margin-top:6px; height:86px; overflow:visible;
+      margin-top:2px; height:86px; overflow:visible;
       break-inside:avoid; page-break-inside:avoid;
     }
     .footer-waves-back{ position:absolute; top:0; left:0; right:0; margin-top:0; }
@@ -1196,7 +1244,7 @@ function agregarSemana(prodArr, censoArr){
     mediaDiurno: media(diurno,'total'),
     mediaNoturno: media(noturno,'total'),
     taxaOcupacao: ocupacaoMedia,
-    pacientesRegulados: ultimoCenso.regulacao ?? 0,
+    pacientesRegulados: ultimoCenso.regulacao ?? 0, // fallback — sobrescrito em renderizarSemana com dado da planilha de Controle de Internamentos (Motivo de Saída = Transferência)
     altas: soma(prodArr,'alta'),
     internacoes: soma(prodArr,'internamento'),
     transferencias: soma(prodArr,'transferencia'),
@@ -1234,8 +1282,10 @@ function fmtPctAlerta(n){
   return Math.abs(n - arred) < 0.05 ? `${arred}` : n.toFixed(1).replace('.', ',');
 }
 
-function gerarAlertas(atual, anterior, producaoExtra){
-  // Cada item: {prioridade, texto} — 1 = mais relevante, 6 = menos relevante.
+function gerarAlertas(atual, anterior){
+  // Cada item: {prioridade, texto} — 1 = mais relevante, 5 = menos relevante.
+  // (Motivo de Saída deixou de gerar item aqui — ver painel "Motivo das
+  // Saídas" em Produção Assistencial.)
   const itens = [];
 
   /* ---------------------------------------------------------------------
@@ -1322,40 +1372,15 @@ function gerarAlertas(atual, anterior, producaoExtra){
   }
 
   /* ---------------------------------------------------------------------
-     PRIORIDADE 5 — Fila de regulação (valor absoluto).
+     PRIORIDADE 5 — Pacientes Regulados / Transferências (valor absoluto).
+     Texto ajustado: a fonte deste indicador mudou (agora é a contagem de
+     Transferências da planilha de Controle de Internamentos), então deixou
+     de ser uma "fila aguardando ao fim da semana" e passou a ser um total
+     do período.
      --------------------------------------------------------------------- */
   if(atual.pacientesRegulados > LIMIARES_ALERTA.filaRegulacao){
     itens.push({ prioridade:5, texto:
-      `A fila de regulação estava com ${fmtInt(atual.pacientesRegulados)} pacientes aguardando ao fim da semana, acima do limite de ${LIMIARES_ALERTA.filaRegulacao} definido para acompanhamento.` });
-  }
-
-  /* ---------------------------------------------------------------------
-     PRIORIDADE 6 — Motivo de Saída (descritivo, planilha de Internamentos).
-     Não é um alerta de limiar — é contexto informativo, sempre que houver
-     saídas registradas na semana selecionada.
-     --------------------------------------------------------------------- */
-  if(producaoExtra && producaoExtra.motivoSaida){
-    const m = producaoExtra.motivoSaida;
-    const altas = m.alta || 0, transf = m.transferencia || 0, evasoes = m.evasao || 0, obitos = m.obito || 0;
-    const total = altas + transf + evasoes + obitos + (m.outros || 0);
-    if(total > 0){
-      const cats = [];
-      if(altas)   cats.push([altas, 'alta', 'altas']);
-      if(transf)  cats.push([transf, 'transferência', 'transferências']);
-      if(evasoes) cats.push([evasoes, 'evasão', 'evasões']);
-      if(obitos)  cats.push([obitos, 'óbito', 'óbitos']);
-
-      const partes = cats.map(([n, s, p], idx) =>
-        idx === 0
-          ? `${fmtInt(n)} ${pl(n,'foi','foram')} ${pl(n,s,p)}`
-          : `${fmtInt(n)} ${pl(n,s,p)}`
-      );
-      const artigo = total === 1 ? 'Da' : 'Das';
-      const frase = partes.length === 1
-        ? `${artigo} ${fmtInt(total)} ${pl(total,'saída registrada','saídas registradas')} na semana, ${partes[0]}.`
-        : `${artigo} ${fmtInt(total)} ${pl(total,'saída registrada','saídas registradas')} na semana, ${partes.slice(0,-1).join(', ')} e ${partes[partes.length-1]}.`;
-      itens.push({ prioridade:6, texto: frase });
-    }
+      `Foram registradas ${fmtInt(atual.pacientesRegulados)} transferências (Pacientes Regulados) na semana, acima do limite de ${LIMIARES_ALERTA.filaRegulacao} definido para acompanhamento.` });
   }
 
   return itens.sort((a,b) => a.prioridade - b.prioridade).map(i => i.texto);
@@ -1521,7 +1546,7 @@ function renderAlerta(alertas){
   }
 }
 
-function renderProducao(atual, tempoMedioPermanencia, ocupacaoPorTipoLeito){
+function renderProducao(atual, tempoMedioPermanencia, ocupacaoPorTipoLeito, motivoSaida){
   const cards = [
     {ico:"<svg width=\"36\" height=\"36\" viewBox=\"0 0 36 36\" fill=\"none\"><circle cx=\"14\" cy=\"9\" r=\"5\" fill=\"#2F8F5B\"/><path d=\"M6 30c0-4.4 3.6-8 8-8s8 3.6 8 8\" stroke=\"#2F8F5B\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"28\" y1=\"22\" x2=\"28\" y2=\"8\" stroke=\"#2F8F5B\" stroke-width=\"2.5\" stroke-linecap=\"round\"/><polyline points=\"23,13 28,8 33,13\" stroke=\"#2F8F5B\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>",lbl:"ALTAS",val:fmt(atual.altas),pendente:false},    {ico:"<svg width=\"36\" height=\"36\" viewBox=\"0 0 36 36\" fill=\"none\"><rect x=\"2\" y=\"23\" width=\"32\" height=\"6\" rx=\"3\" fill=\"#2F8F5B\"/><rect x=\"3\" y=\"29\" width=\"5\" height=\"6\" rx=\"2\" fill=\"#2F8F5B\"/><rect x=\"28\" y=\"29\" width=\"5\" height=\"6\" rx=\"2\" fill=\"#2F8F5B\"/><rect x=\"2\" y=\"9\" width=\"3.5\" height=\"14\" rx=\"1.8\" fill=\"#2F8F5B\"/><rect x=\"5.5\" y=\"15\" width=\"28\" height=\"8\" rx=\"4\" fill=\"#2F8F5B\"/><circle cx=\"11\" cy=\"11\" r=\"5.5\" fill=\"#2F8F5B\"/><rect x=\"28\" y=\"5\" width=\"2.8\" height=\"7.5\" rx=\"1.3\" fill=\"#2F8F5B\"/><rect x=\"25.5\" y=\"7.5\" width=\"7.5\" height=\"2.8\" rx=\"1.3\" fill=\"#2F8F5B\"/></svg>",lbl:"INTERNA\u00c7\u00d5ES",val:fmt(atual.internacoes),pendente:false},    {ico:"<svg width=\"36\" height=\"36\" viewBox=\"0 0 36 36\" fill=\"none\"><rect x=\"2\" y=\"14\" width=\"26\" height=\"15\" rx=\"3\" fill=\"#2F8F5B\"/><path d=\"M28 20h5l3 6v3H28V20z\" fill=\"#2F8F5B\"/><circle cx=\"8\" cy=\"30\" r=\"4\" fill=\"#fff\" stroke=\"#2F8F5B\" stroke-width=\"2\"/><circle cx=\"27\" cy=\"30\" r=\"4\" fill=\"#fff\" stroke=\"#2F8F5B\" stroke-width=\"2\"/><rect x=\"8\" y=\"16\" width=\"2.5\" height=\"8\" rx=\"1\" fill=\"#fff\"/><rect x=\"5.5\" y=\"19\" width=\"7.5\" height=\"2.5\" rx=\"1\" fill=\"#fff\"/><rect x=\"13\" y=\"14\" width=\"12\" height=\"6\" rx=\"1.5\" fill=\"#fff\" opacity=\".35\"/></svg>",lbl:"TRANSFER\u00caNCIAS",val:fmt(atual.transferencias),pendente:false},    {ico:"<svg width=\"36\" height=\"36\" viewBox=\"0 0 36 36\" fill=\"none\"><rect x=\"7\" y=\"14\" width=\"22\" height=\"14\" rx=\"4\" fill=\"#2F8F5B\"/><rect x=\"4\" y=\"22\" width=\"5\" height=\"10\" rx=\"2\" fill=\"#2F8F5B\"/><rect x=\"27\" y=\"22\" width=\"5\" height=\"10\" rx=\"2\" fill=\"#2F8F5B\"/><rect x=\"7\" y=\"10\" width=\"22\" height=\"6\" rx=\"3\" fill=\"#2F8F5B\"/><rect x=\"9\" y=\"30\" width=\"18\" height=\"3\" rx=\"1.5\" fill=\"#2F8F5B\"/></svg>",lbl:"OBSERVA\u00c7\u00c3O<br>(POLTRONAS/LEITOS)",val:fmt(atual.observacao),pendente:false},    {ico:"<svg width=\"36\" height=\"36\" viewBox=\"0 0 36 36\" fill=\"none\"><path d=\"M18 30 C18 30 4 21 4 12 C4 7.5 7.5 4 12 4 C14.5 4 16.5 5.5 18 7.5 C19.5 5.5 21.5 4 24 4 C28.5 4 32 7.5 32 12 C32 21 18 30 18 30Z\" fill=\"#2F8F5B\"/><polyline points=\"8,13 12,13 14,9 16,18 18,13 20,13 28,13\" stroke=\"#fff\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>",lbl:"SALA VERMELHA<br>(ATENDIMENTOS)",val:fmt(atual.salaVermelhaAtend),pendente:false},    {ico:"<svg width=\"36\" height=\"36\" viewBox=\"0 0 36 36\" fill=\"none\"><path d=\"M13 4v14L6 28a3.5 3.5 0 0 0 3 5.5h14A3.5 3.5 0 0 0 26 28L19 18V4\" stroke=\"#2F8F5B\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"11\" y=\"3\" width=\"14\" height=\"3.5\" rx=\"1.8\" fill=\"#2F8F5B\"/><circle cx=\"11.5\" cy=\"27\" r=\"2.5\" fill=\"#2F8F5B\" opacity=\".65\"/><circle cx=\"20\" cy=\"30\" r=\"2\" fill=\"#2F8F5B\" opacity=\".45\"/></svg>",lbl:"EXAMES<br>REALIZADOS",val:fmt(atual.exames),pendente:false},    {ico:"<svg width=\"36\" height=\"36\" viewBox=\"0 0 36 36\" fill=\"none\"><circle cx=\"18\" cy=\"10\" r=\"5.5\" fill=\"#2F8F5B\"/><path d=\"M10 32c0-4.4 3.6-8 8-8s8 3.6 8 8\" stroke=\"#2F8F5B\" stroke-width=\"3.5\" stroke-linecap=\"round\"/><circle cx=\"8\" cy=\"13\" r=\"4\" fill=\"#2F8F5B\" opacity=\".7\"/><path d=\"M2 32c0-3.8 3-7 6.5-7\" stroke=\"#2F8F5B\" stroke-width=\"3\" stroke-linecap=\"round\" opacity=\".7\"/><circle cx=\"28\" cy=\"13\" r=\"4\" fill=\"#2F8F5B\" opacity=\".7\"/><path d=\"M34 32c0-3.8-3-7-6.5-7\" stroke=\"#2F8F5B\" stroke-width=\"3\" stroke-linecap=\"round\" opacity=\".7\"/></svg>",lbl:"M\u00c9DIA DI\u00c1RIA<br>DE PACIENTES",val:fmt(atual.mediaDiariaPacientes,1),pendente:false},    {ico:"<svg width=\"36\" height=\"36\" viewBox=\"0 0 36 36\" fill=\"none\"><circle cx=\"18\" cy=\"18\" r=\"14\" stroke=\"#2F8F5B\" stroke-width=\"2.5\"/><line x1=\"18\" y1=\"9\" x2=\"18\" y2=\"18\" stroke=\"#2F8F5B\" stroke-width=\"2.5\" stroke-linecap=\"round\"/><line x1=\"18\" y1=\"18\" x2=\"25\" y2=\"22\" stroke=\"#2F8F5B\" stroke-width=\"2.5\" stroke-linecap=\"round\"/><circle cx=\"18\" cy=\"18\" r=\"2\" fill=\"#2F8F5B\"/></svg>",lbl:"TEMPO M\u00c9DIO<br>DE PERMAN\u00caNCIA",val:(tempoMedioPermanencia!=null?fmt(tempoMedioPermanencia,1)+' dias':'—'),pendente:(tempoMedioPermanencia==null)}
   ];
@@ -1535,24 +1560,78 @@ function renderProducao(atual, tempoMedioPermanencia, ocupacaoPorTipoLeito){
     </div>`;
   }).join('');
 
-  // Internamentos por Tipo de Leito — faixa compacta abaixo dos 8 KPIs.
-  // Fonte: producaoExtra.ocupacaoPorTipoLeito (planilha de Internamentos).
-  // Contagem de admissões da semana por tipo — nunca chamar de "ocupação"/
-  // "taxa de ocupação", pois não há aqui um censo simultâneo de leitos.
+  // Internamentos por Tipo de Leito (esquerda) + Motivo das Saídas (direita)
+  // — faixa compacta abaixo dos 8 KPIs, dividida em duas metades sem
+  // aumentar a altura do painel. Ambas as fontes vêm da planilha de
+  // Controle de Internamentos (producaoExtra). "Motivo das Saídas" é a
+  // informação que antes aparecia em texto no Alerta da Semana (removida —
+  // ver gerarAlertas): agora vive só aqui, em formato de KPI visual.
   const elTipoLeito = document.getElementById('prodTipoLeito');
   const NOMES_LEITO = { geral:'Geral', vermelha:'Sala Vermelha', isolamento:'Isolamento', respiratorio:'Respiratório' };
   const ICO_LEITO = '<svg viewBox="0 0 24 24" fill="none"><rect x="2.5" y="15" width="19" height="4" rx="1.5" fill="#2F8F5B"/><rect x="2.5" y="19.5" width="2.3" height="2.5" rx="1" fill="#2F8F5B"/><rect x="19.2" y="19.5" width="2.3" height="2.5" rx="1" fill="#2F8F5B"/><rect x="2.5" y="7" width="2" height="9" rx="1" fill="#2F8F5B"/><circle cx="7.5" cy="11" r="2.3" fill="#2F8F5B"/><rect x="10.5" y="12" width="9" height="3" rx="1.5" fill="#2F8F5B"/></svg>';
+  const ICO_MOTIVO = '<svg viewBox="0 0 24 24" fill="none"><path d="M9 3H5.5A1.5 1.5 0 0 0 4 4.5v15A1.5 1.5 0 0 0 5.5 21H9" stroke="#2F8F5B" stroke-width="1.8" stroke-linecap="round"/><path d="M14 8l5 4-5 4" stroke="#2F8F5B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><line x1="19" y1="12" x2="9" y2="12" stroke="#2F8F5B" stroke-width="1.8" stroke-linecap="round"/></svg>';
+
   const temDadosLeito = ocupacaoPorTipoLeito && Object.values(ocupacaoPorTipoLeito).some(v => v > 0);
+
+  // Motivo das Saídas: só Altas/Transferências/Evasões entram no painel
+  // (conforme pedido) — óbitos e outros motivos não aparecem aqui. O
+  // percentual de cada barra é relativo à soma dessas três categorias.
+  const MOTIVO_CFG = [
+    { key:'transferencia', lbl:'Transferências', cor:'#E5484D' }, // mesma cor do card "Total de Pacientes Regulados"
+    { key:'alta',          lbl:'Altas',           cor:'#2F8F5B' },
+    { key:'evasao',        lbl:'Evasões',          cor:'#D4890A' }
+  ];
+  const totalMotivo = motivoSaida
+    ? (motivoSaida.transferencia||0) + (motivoSaida.alta||0) + (motivoSaida.evasao||0)
+    : 0;
+  const temDadosMotivo = totalMotivo > 0;
+
+  let colEsqHtml, colDirHtml;
+
   if(temDadosLeito){
-    elTipoLeito.classList.remove('vazio');
     const itensHtml = Object.keys(NOMES_LEITO).map(k => `
       <div class="prod-tipo-leito-item">
         <div class="n">${fmt(ocupacaoPorTipoLeito[k]||0)}</div>
         <div class="lbl">${NOMES_LEITO[k]}</div>
       </div>`).join('');
-    elTipoLeito.innerHTML = `
+    colEsqHtml = `
       <div class="prod-tipo-leito-header">${ICO_LEITO}<span class="prod-tipo-leito-titulo">Internamentos por Tipo de Leito</span></div>
       <div class="prod-tipo-leito-itens">${itensHtml}</div>`;
+  } else {
+    colEsqHtml = `
+      <div class="prod-tipo-leito-header">${ICO_LEITO}<span class="prod-tipo-leito-titulo">Internamentos por Tipo de Leito</span></div>
+      <div class="prod-tipo-leito-col-vazio">Dado indisponível</div>`;
+  }
+
+  if(temDadosMotivo){
+    const ordenado = MOTIVO_CFG
+      .map(m => ({ ...m, n: motivoSaida[m.key] || 0 }))
+      .sort((a,b) => b.n - a.n); // maior primeiro, estilo dashboard executivo
+    const itensMotivoHtml = ordenado.map(m => {
+      const pct = totalMotivo ? Math.round((m.n/totalMotivo)*100) : 0;
+      return `
+      <div class="prod-motivo-item">
+        <span class="prod-motivo-lbl">${m.lbl}</span>
+        <div class="prod-motivo-bar-track"><div class="prod-motivo-bar-fill" style="width:${pct}%;background:${m.cor};"></div></div>
+        <span class="prod-motivo-pct" style="color:${m.cor}">${pct}%</span>
+      </div>`;
+    }).join('');
+    colDirHtml = `
+      <div class="prod-tipo-leito-header">${ICO_MOTIVO}<span class="prod-tipo-leito-titulo">Motivo das Saídas</span></div>
+      <div class="prod-motivo-itens">${itensMotivoHtml}</div>`;
+  } else {
+    colDirHtml = `
+      <div class="prod-tipo-leito-header">${ICO_MOTIVO}<span class="prod-tipo-leito-titulo">Motivo das Saídas</span></div>
+      <div class="prod-tipo-leito-col-vazio">Dado indisponível</div>`;
+  }
+
+  if(temDadosLeito || temDadosMotivo){
+    elTipoLeito.classList.remove('vazio');
+    elTipoLeito.innerHTML = `
+      <div class="prod-tipo-leito-row">
+        <div class="prod-tipo-leito-col prod-tipo-leito-col-esq">${colEsqHtml}</div>
+        <div class="prod-tipo-leito-col prod-tipo-leito-col-dir">${colDirHtml}</div>
+      </div>`;
   } else {
     elTipoLeito.classList.add('vazio');
     elTipoLeito.innerHTML = '';
@@ -1756,9 +1835,27 @@ function renderizarSemana(semanaSelecionada){
   const chaveCenario = semanaSelecionada.replace('/', '_'); // usado por Cenário e Produção Assistencial
   const producaoExtra = producaoAssistencialMapGlobal ? producaoAssistencialMapGlobal[chaveCenario] : null;
 
+  // producaoExtra da semana anterior — necessário porque "Pacientes Regulados"
+  // passou a vir da planilha de Controle de Internamentos (ver abaixo), e o
+  // comparativo/variação também precisam desse valor para a semana anterior.
+  const chaveCenarioAnterior = semanaAnteriorKey ? semanaAnteriorKey.replace('/', '_') : null;
+  const producaoExtraAnterior = (chaveCenarioAnterior && producaoAssistencialMapGlobal)
+    ? producaoAssistencialMapGlobal[chaveCenarioAnterior] : null;
+
+  // "Pacientes Regulados" = quantidade de registros com Motivo de Saída =
+  // Transferência na planilha de Controle de Internamentos (mesma fonte do
+  // painel "Motivo das Saídas" em Produção Assistencial). Substitui o valor
+  // antigo (fila de regulação do censo/Firebase). Alimenta o card, o
+  // comparativo semanal e o cálculo de variação. Sem dado disponível → 0,
+  // no mesmo padrão dos demais totalizadores desta função (soma()).
+  atual.pacientesRegulados = (producaoExtra && producaoExtra.motivoSaida) ? (producaoExtra.motivoSaida.transferencia || 0) : 0;
+  if(anterior){
+    anterior.pacientesRegulados = (producaoExtraAnterior && producaoExtraAnterior.motivoSaida) ? (producaoExtraAnterior.motivoSaida.transferencia || 0) : 0;
+  }
+
   renderKPIs(atual, anterior);
-  renderAlerta(gerarAlertas(atual, anterior, producaoExtra));
-  renderProducao(atual, producaoExtra ? producaoExtra.tempoMedioPermanencia : null, producaoExtra ? producaoExtra.ocupacaoPorTipoLeito : null);
+  renderAlerta(gerarAlertas(atual, anterior));
+  renderProducao(atual, producaoExtra ? producaoExtra.tempoMedioPermanencia : null, producaoExtra ? producaoExtra.ocupacaoPorTipoLeito : null, producaoExtra ? producaoExtra.motivoSaida : null);
   renderComparativo(atual, anterior);
   renderCharts(prodMap, semanaSelecionada, prodAtual); // gráfico de evolução termina na semana selecionada
 
