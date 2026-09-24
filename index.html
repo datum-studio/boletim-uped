@@ -1850,23 +1850,23 @@ function renderProducao(atual, tempoMedioPermanencia, ocupacaoPorTipoLeito, moti
 
 function renderComparativo(atual, anterior){
   const linhas = [
-    ['Total de Atendimentos', atual.totalAtendimentos, anterior?.totalAtendimentos],
-    ['Média de Internamentos', atual.mediaInternamentos, anterior?.mediaInternamentos],
-    ['Taxa de Ocupação dos Leitos (%)', atual.taxaOcupacao, anterior?.taxaOcupacao],
-    ['Internações', atual.internacoes, anterior?.internacoes],
-    ['Pacientes Regulados', atual.pacientesRegulados, anterior?.pacientesRegulados],
-    ['Transferências', atual.transferencias, anterior?.transferencias],
-    ['Altas', atual.altas, anterior?.altas],
-    ['Exames Realizados', atual.exames, anterior?.exames],
+    ['Total de Atendimentos', atual.totalAtendimentos, anterior?.totalAtendimentos, 0],
+    ['Média de Internamentos', atual.mediaInternamentos, anterior?.mediaInternamentos, 1],
+    ['Taxa de Ocupação dos Leitos (%)', atual.taxaOcupacao, anterior?.taxaOcupacao, 1],
+    ['Internações', atual.internacoes, anterior?.internacoes, 0],
+    ['Pacientes Regulados', atual.pacientesRegulados, anterior?.pacientesRegulados, 0],
+    ['Transferências', atual.transferencias, anterior?.transferencias, 0],
+    ['Altas', atual.altas, anterior?.altas, 0],
+    ['Exames Realizados', atual.exames, anterior?.exames, 0],
   ];
-  document.getElementById('comparativoBody').innerHTML = linhas.map(([nome,a,b])=>{
+  document.getElementById('comparativoBody').innerHTML = linhas.map(([nome,a,b,casas])=>{
     if(b===undefined || b===null){
-      return `<tr><td>${nome}</td><td>${fmt(a,1)}</td><td>—</td><td class="var-flat">—</td></tr>`;
+      return `<tr><td>${nome}</td><td>${fmt(a,casas)}</td><td>—</td><td class="var-flat">—</td></tr>`;
     }
     const v = variacaoPct(a,b);
     const cls = v>0.5?'var-up':(v<-0.5?'var-down':'var-flat');
     const seta = v>0.5?'▲':(v<-0.5?'▼':'—');
-    return `<tr><td>${nome}</td><td>${fmt(a,1)}</td><td>${fmt(b,1)}</td><td class="${cls}">${seta} ${fmt(Math.abs(v),1)}%</td></tr>`;
+    return `<tr><td>${nome}</td><td>${fmt(a,casas)}</td><td>${fmt(b,casas)}</td><td class="${cls}">${seta} ${fmt(Math.abs(v),1)}%</td></tr>`;
   }).join('');
 }
 
