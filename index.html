@@ -55,6 +55,8 @@
   }
   .upload-box:hover{ border-color:var(--azul-ped); }
   .upload-box.filled{ border-color:var(--risco-verde); background:#EAF9EF; }
+  #loaderChecklist{ text-align:left; margin-top:18px; display:none; }
+  #loaderChecklist .diag-secao-titulo:first-child{ margin-top:0; }
   .upload-box input{ display:none; }
   .upload-box .label{ font-weight:700; color:var(--azul-escuro); display:block; margin-bottom:4px;}
   .upload-box .status{ font-size:13px; color:var(--texto-suave); }
@@ -542,6 +544,59 @@
   .se-consulta select{
     border:1px solid var(--azul-ped); border-radius:7px; background:#fff;
     color:var(--azul-escuro); font-weight:700; font-size:13.5px; padding:5px 8px; cursor:pointer;
+  }
+
+  /* --- Painel de Diagnóstico de Dados da Semana ---------------------------
+     Só existe em tela (nunca é impresso — fica fora do fluxo do .boletim e
+     também tem uma trava extra em @media print, por segurança). Verifica se
+     os 14 registros esperados de producao/censo (7 dias x 2 turnos) estão
+     completos, e se cenário/produção assistencial existem para a semana. */
+  .diag-overlay{
+    display:none; position:fixed; inset:0; background:rgba(15,35,55,.55);
+    z-index:9999; align-items:flex-start; justify-content:center; padding:32px 16px;
+    overflow-y:auto;
+  }
+  .diag-overlay.aberto{ display:flex; }
+  .diag-modal{
+    background:#fff; border-radius:14px; width:100%; max-width:560px;
+    box-shadow:0 12px 40px rgba(0,0,0,.25); overflow:hidden;
+  }
+  .diag-modal-header{
+    background:var(--azul-ped); color:#fff; padding:16px 20px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .diag-modal-header h3{ margin:0; font-family:var(--font-display); font-size:17px; }
+  .diag-modal-close{
+    background:rgba(255,255,255,.18); border:none; color:#fff; width:28px; height:28px;
+    border-radius:50%; cursor:pointer; font-size:16px; line-height:1; flex-shrink:0;
+  }
+  .diag-modal-body{ padding:16px 20px 20px; max-height:70vh; overflow-y:auto; }
+  .diag-secao-titulo{
+    font-family:var(--font-display); font-weight:700; font-size:13px; color:var(--azul-escuro);
+    text-transform:uppercase; letter-spacing:.02em; margin:16px 0 6px; display:flex; align-items:center; gap:6px;
+  }
+  .diag-secao-titulo:first-child{ margin-top:0; }
+  .diag-secao-status{
+    font-size:11px; font-weight:700; padding:2px 8px; border-radius:20px; margin-left:auto;
+  }
+  .diag-secao-status.ok{ background:#E3F1E9; color:#2F8F5B; }
+  .diag-secao-status.falha{ background:#FBE3E3; color:#C0392B; }
+  .diag-grid{ display:grid; grid-template-columns:1fr 1fr; gap:4px 10px; }
+  .diag-row{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    font-size:12.5px; padding:5px 9px; border-radius:7px; background:#F7FAFD;
+  }
+  .diag-row.falha{ background:#FBE9E9; color:#C0392B; font-weight:600; }
+  .diag-row.ok{ color:#2F6B45; }
+  .diag-badge{ font-size:11px; font-weight:700; }
+  .diag-resumo{
+    font-size:13px; padding:10px 12px; border-radius:8px; margin-bottom:4px;
+    background:#F7FAFD; border:1.5px solid var(--azul-ped); color:var(--azul-escuro);
+  }
+  .diag-resumo.falha{ background:#FBE9E9; border-color:#C0392B; color:#C0392B; font-weight:600; }
+  @media print{
+    .diag-overlay{ display:none !important; }
+    #loaderScreen{ display:none !important; }
   }
   .se-consulta svg{ flex-shrink:0; }
 
@@ -1079,6 +1134,7 @@
         <select id="seSelector"></select>
       </div>
       <button class="btn-secundario" onclick="imprimirBoletim()">Imprimir / Salvar PDF</button>
+      <button class="btn-secundario" onclick="abrirDiagnosticoSemana()">Verificar dados da semana</button>
     </div></div>
 
   </div>
@@ -1414,6 +1470,160 @@ function imprimirBoletim(){
 window.addEventListener('afterprint', () => {
   document.title = __tituloOriginal;
 });
+
+/* =========================================================================
+   DIAGNÓSTICO DE DADOS DA SEMANA
+   Ferramenta de conferência manual — nunca aparece na impressão (o botão
+   que abre isso vive dentro de .footer-actions, já escondida em @media
+   print, e o próprio .diag-overlay tem uma trava extra por segurança).
+   Verifica, para a semana selecionada no boletim:
+     - producao: os 14 registros esperados (7 dias x DIURNO/NOTURNO)
+     - censo: os mesmos 14 registros
+     - Cenário Epidemiológico: se existe documento para a semana
+     - Produção Assistencial (Controle de Internamentos / Motivo de Saída):
+       se existe documento para a semana
+   Não altera nada — só lê o que já está carregado em memória
+   (prodMapGlobal / censoMapGlobal / cenarioMapGlobal / producaoAssistencialMapGlobal).
+   ========================================================================= */
+function diasDaSemana(info){
+  // info vem de dateToEpiWeek (tem .start, um Date UTC do domingo da semana).
+  const dias = [];
+  for(let i=0;i<7;i++){
+    const d = new Date(info.start);
+    d.setUTCDate(info.start.getUTCDate()+i);
+    const iso = `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
+    dias.push({ iso, label: fmtDataBR(d) });
+  }
+  return dias;
+}
+
+function linhaDiag(label, ok){
+  return `<div class="diag-row ${ok?'ok':'falha'}"><span>${label}</span><span class="diag-badge">${ok?'✔ OK':'✖ Faltando'}</span></div>`;
+}
+
+/* Lista TODAS as semanas com QUALQUER dado (producao ou censo), completas ou
+   não — diferente de #seSelector, que só lista semanas completas (>=14
+   registros) e por isso NUNCA mostraria a semana com problema. Ordenada da
+   mais recente pra mais antiga. */
+function listaTodasSemanas(){
+  const chaves = new Set([
+    ...Object.keys(prodMapGlobal || {}),
+    ...Object.keys(censoMapGlobal || {})
+  ]);
+  return Array.from(chaves).sort((a,b) => {
+    const A = (prodMapGlobal && prodMapGlobal[a]) ? prodMapGlobal[a].info : censoMapGlobal[a].info;
+    const B = (prodMapGlobal && prodMapGlobal[b]) ? prodMapGlobal[b].info : censoMapGlobal[b].info;
+    return (B.year*100+B.week) - (A.year*100+A.week); // desc
+  });
+}
+
+function abrirDiagnosticoSemana(chaveEscolhida){
+  let overlay = document.getElementById('diagOverlay');
+  if(!overlay){
+    overlay = document.createElement('div');
+    overlay.id = 'diagOverlay';
+    overlay.className = 'diag-overlay';
+    overlay.addEventListener('click', (e) => { if(e.target === overlay) fecharDiagnosticoSemana(); });
+    document.body.appendChild(overlay);
+  }
+
+  const todasSemanas = listaTodasSemanas();
+  if(todasSemanas.length === 0){
+    overlay.innerHTML = `
+      <div class="diag-modal">
+        <div class="diag-modal-header"><h3>Verificação de dados</h3><button class="diag-modal-close" onclick="fecharDiagnosticoSemana()">✕</button></div>
+        <div class="diag-modal-body"><div class="diag-resumo falha">Nenhum dado carregado ainda para verificar.</div></div>
+      </div>`;
+    overlay.classList.add('aberto');
+    return;
+  }
+
+  // Padrão: a semana mais recente presente nos dados — normalmente é
+  // exatamente a que está com problema (por isso não aparece em #seSelector).
+  const chave = (chaveEscolhida && todasSemanas.includes(chaveEscolhida)) ? chaveEscolhida : todasSemanas[0];
+
+  const info = (prodMapGlobal && prodMapGlobal[chave]) ? prodMapGlobal[chave].info : censoMapGlobal[chave].info;
+  const dias = diasDaSemana(info);
+  const chaveExtra = chave.replace('/', '_'); // formato usado em cenarioMapGlobal/producaoAssistencialMapGlobal
+
+  const prodRecs = (prodMapGlobal && prodMapGlobal[chave]) ? prodMapGlobal[chave].records : [];
+  const censoRecs = (censoMapGlobal && censoMapGlobal[chave]) ? censoMapGlobal[chave].records : [];
+  const prodPresentes = new Set(prodRecs.map(r => r.data+'_'+r.turno));
+  const censoPresentes = new Set(censoRecs.map(r => r.data+'_'+r.turno));
+
+  let prodFaltando = 0, censoFaltando = 0;
+  const linhasProd = [], linhasCenso = [];
+  dias.forEach(d => {
+    ['DIURNO','NOTURNO'].forEach(turno => {
+      const chaveDia = d.iso+'_'+turno;
+      const okProd = prodPresentes.has(chaveDia);
+      const okCenso = censoPresentes.has(chaveDia);
+      if(!okProd) prodFaltando++;
+      if(!okCenso) censoFaltando++;
+      linhasProd.push(linhaDiag(`${d.label} ${turno}`, okProd));
+      linhasCenso.push(linhaDiag(`${d.label} ${turno}`, okCenso));
+    });
+  });
+
+  const temCenario = !!(cenarioMapGlobal && cenarioMapGlobal[chaveExtra]);
+  const temProducaoAssistencial = !!(producaoAssistencialMapGlobal && producaoAssistencialMapGlobal[chaveExtra]);
+  const estaNoSeletor = prodFaltando===0 && (prodRecs.length>=14); // mesma regra de popularSeletorSemanas
+
+  const tudoOk = prodFaltando===0 && censoFaltando===0 && temCenario && temProducaoAssistencial;
+  const resumo = tudoOk
+    ? `Tudo certo com os dados da ${chave}.`
+    : `Encontrei pendências na ${chave} — confira abaixo.${estaNoSeletor?'':' (por isso essa semana não aparece no seletor "Consultar semana" — só semanas completas aparecem lá.)'}`;
+
+  const opcoesSelect = todasSemanas.map(k =>
+    `<option value="${k}"${k===chave?' selected':''}>${k}</option>`
+  ).join('');
+
+  overlay.innerHTML = `
+    <div class="diag-modal">
+      <div class="diag-modal-header">
+        <h3>Verificação de dados</h3>
+        <button class="diag-modal-close" onclick="fecharDiagnosticoSemana()">✕</button>
+      </div>
+      <div class="diag-modal-body">
+        <div class="se-consulta" style="margin-bottom:12px;">
+          <label for="diagSeSelector">Semana:</label>
+          <select id="diagSeSelector" onchange="abrirDiagnosticoSemana(this.value)">${opcoesSelect}</select>
+        </div>
+
+        <div class="diag-resumo ${tudoOk?'':'falha'}">${resumo}</div>
+
+        <div class="diag-secao-titulo">
+          Produção (Sistema de Plantão)
+          <span class="diag-secao-status ${prodFaltando===0?'ok':'falha'}">${prodFaltando===0 ? '14/14' : (14-prodFaltando)+'/14'}</span>
+        </div>
+        <div class="diag-grid">${linhasProd.join('')}</div>
+
+        <div class="diag-secao-titulo">
+          Censo (Sistema de Plantão)
+          <span class="diag-secao-status ${censoFaltando===0?'ok':'falha'}">${censoFaltando===0 ? '14/14' : (14-censoFaltando)+'/14'}</span>
+        </div>
+        <div class="diag-grid">${linhasCenso.join('')}</div>
+
+        <div class="diag-secao-titulo">
+          Cenário Epidemiológico
+          <span class="diag-secao-status ${temCenario?'ok':'falha'}">${temCenario?'OK':'Não encontrado'}</span>
+        </div>
+
+        <div class="diag-secao-titulo">
+          Produção Assistencial (Controle de Internamentos)
+          <span class="diag-secao-status ${temProducaoAssistencial?'ok':'falha'}">${temProducaoAssistencial?'OK':'Não encontrado'}</span>
+        </div>
+      </div>
+    </div>`;
+  overlay.classList.add('aberto');
+}
+
+function fecharDiagnosticoSemana(){
+  const overlay = document.getElementById('diagOverlay');
+  if(overlay) overlay.classList.remove('aberto');
+}
+document.addEventListener('keydown', (e) => { if(e.key === 'Escape') fecharDiagnosticoSemana(); });
+
 
 /* PWA — registra o service worker se o navegador suportar e o arquivo
    sw.js estiver disponível (mesmo diretório do index.html no GitHub Pages).
@@ -1883,6 +2093,84 @@ function popularSeletorSemanas(prodMap, semanaInicial){
   sel.onchange = () => renderizarSemana(sel.value);
 }
 
+/* =========================================================================
+   CHECKLIST AUTOMÁTICO DE CARREGAMENTO
+   Dispara sozinho quando o boletim NÃO consegue carregar (conexão falhou,
+   ou não há nenhuma semana epidemiológica completa ainda) — mostra na
+   própria tela de carregamento por que, sem precisar abrir o console.
+   Diferente do botão "Verificar dados da semana" (que fica dentro de
+   #boletimContent e por isso só aparece quando o boletim JÁ carregou),
+   este checklist vive dentro de #loaderScreen. Reaproveita diasDaSemana/
+   linhaDiag/listaTodasSemanas, já usados pelo diagnóstico manual.
+   Status de conexão vem de window.__statusConexao, preenchido pelo script
+   de carregamento do Firebase (module script, mais abaixo no arquivo).
+   ========================================================================= */
+function statusConexaoLinha(label, status, erro){
+  let icone='✖', texto='Falhou', cls='falha';
+  if(status === 'ok'){ icone='✔'; texto='Conectado'; cls='ok'; }
+  else if(status === 'nao-configurado'){ icone='—'; texto='Não configurado (opcional)'; cls=''; }
+  else if(status === 'erro'){ texto = erro ? `Falhou: ${erro}` : 'Falhou'; }
+  else { icone='…'; texto='Ainda não verificado'; cls=''; }
+  return `<div class="diag-row ${cls}"><span>${label}</span><span class="diag-badge">${icone} ${texto}</span></div>`;
+}
+
+function mostrarChecklistCarregamento(){
+  const status = window.__statusConexao || {};
+  const loaderMsgEl = document.getElementById('loaderMsg');
+  if(loaderMsgEl) loaderMsgEl.style.display = 'none';
+
+  let painel = document.getElementById('loaderChecklist');
+  if(!painel){
+    painel = document.createElement('div');
+    painel.id = 'loaderChecklist';
+    document.getElementById('loaderScreen').appendChild(painel);
+  }
+
+  let html = `
+    <div class="diag-secao-titulo">Conexão Firebase</div>
+    <div class="diag-grid">
+      ${statusConexaoLinha('uped-plantao (produção/censo)', status.plantao, status.plantaoErro)}
+      ${statusConexaoLinha('uped-cenario-epi', status.cenario, status.cenarioErro)}
+    </div>`;
+
+  if(status.plantao === 'ok'){
+    const todasSemanas = listaTodasSemanas();
+    if(todasSemanas.length === 0){
+      html += `<div class="diag-resumo falha" style="margin-top:12px;">Conectou certinho, mas não encontrei nenhum registro em "producao" nem "censo" ainda.</div>`;
+    } else {
+      const chave = todasSemanas[0]; // mais recente nos dados brutos
+      const info = (prodMapGlobal[chave] || censoMapGlobal[chave]).info;
+      const dias = diasDaSemana(info);
+      const prodRecs = prodMapGlobal[chave] ? prodMapGlobal[chave].records : [];
+      const prodPresentes = new Set(prodRecs.map(r => r.data+'_'+r.turno));
+      let faltando = 0;
+      const linhas = [];
+      dias.forEach(d => {
+        ['DIURNO','NOTURNO'].forEach(turno => {
+          const ok = prodPresentes.has(d.iso+'_'+turno);
+          if(!ok) faltando++;
+          linhas.push(linhaDiag(`${d.label} ${turno}`, ok));
+        });
+      });
+      html += `
+        <div class="diag-secao-titulo">
+          Semana mais recente nos dados: ${chave}
+          <span class="diag-secao-status ${faltando===0?'ok':'falha'}">${14-faltando}/14 (produção)</span>
+        </div>
+        <div class="diag-grid">${linhas.join('')}</div>
+        <div class="diag-resumo falha" style="margin-top:8px;">
+          Ainda não fechou nenhuma semana epidemiológica completa (7 dias × DIURNO/NOTURNO em "producao") —
+          por isso o boletim não é exibido. Assim que os registros marcados "Faltando" acima forem lançados,
+          ele aparece sozinho, sem precisar recarregar nada além da página.
+        </div>`;
+    }
+  }
+
+  painel.innerHTML = html;
+  painel.style.display = 'block';
+}
+window.__mostrarChecklistCarregamento = mostrarChecklistCarregamento;
+
 function montarBoletim(producao, censo, cenarioDocs, producaoAssistencialDocs){
   prodMapGlobal = groupBySE(producao);
   censoMapGlobal = groupBySE(censo);
@@ -1895,8 +2183,7 @@ function montarBoletim(producao, censo, cenarioDocs, producaoAssistencialDocs){
 
   const pick = pickSemanaAtual(prodMapGlobal);
   if(!pick){
-    document.getElementById('loaderMsg').textContent = 'Ainda não há nenhuma semana epidemiológica completa nos dados. Assim que a semana atual fechar (domingo a sábado), o boletim aparece aqui.';
-    document.getElementById('loaderMsg').style.display = 'block';
+    mostrarChecklistCarregamento();
     return;
   }
 
@@ -1923,6 +2210,8 @@ if(!firebaseConfig){
     const app = initializeApp(${JSON.stringify(firebaseConfig)});
     const db = getFirestore(app);
 
+    window.__statusConexao = { plantao: null, cenario: null };
+
     // Segundo projeto (Cenário Epidemiológico) — independente e opcional.
     // Se não estiver configurado, ou se a busca falhar, o boletim segue
     // normalmente sem esse bloco preenchido.
@@ -1931,6 +2220,8 @@ if(!firebaseConfig){
     if(cenarioConfig){
       const appCenario = initializeApp(cenarioConfig, 'cenario');
       dbCenario = getFirestore(appCenario);
+    } else {
+      window.__statusConexao.cenario = 'nao-configurado';
     }
 
     async function carregar(){
@@ -1939,28 +2230,36 @@ if(!firebaseConfig){
         const censoSnap = await getDocs(collection(db,'censo'));
         const producao = prodSnap.docs.map(d=>({id:d.id, ...d.data()}));
         const censo = censoSnap.docs.map(d=>({id:d.id, ...d.data()}));
+        window.__statusConexao.plantao = 'ok';
 
         let cenarioDocs = [];
         let producaoAssistencialDocs = [];
         if(dbCenario){
+          let cenarioOk = true, producaoAssistOk = true;
           try{
             const cenarioSnap = await getDocs(collection(dbCenario,'cenarioEpidemiologico'));
             cenarioDocs = cenarioSnap.docs.map(d=>({id:d.id, ...d.data()}));
           } catch(errCenario){
+            cenarioOk = false;
+            window.__statusConexao.cenarioErro = errCenario.message;
             console.warn('Cenário Epidemiológico: não foi possível carregar (bloco fica vazio):', errCenario.message);
           }
           try{
             const producaoSnap = await getDocs(collection(dbCenario,'producaoAssistencial'));
             producaoAssistencialDocs = producaoSnap.docs.map(d=>({id:d.id, ...d.data()}));
           } catch(errProd){
+            producaoAssistOk = false;
+            window.__statusConexao.cenarioErro = window.__statusConexao.cenarioErro || errProd.message;
             console.warn('Produção Assistencial (Internamentos): não foi possível carregar (Tempo Médio fica "—"):', errProd.message);
           }
+          window.__statusConexao.cenario = (cenarioOk && producaoAssistOk) ? 'ok' : 'erro';
         }
 
         window.__montarBoletimFirebase(producao, censo, cenarioDocs, producaoAssistencialDocs);
       } catch(err){
-        document.getElementById('loaderMsg').textContent =
-          'Erro ao conectar no Firebase: ' + err.message + ' — confira a config e as regras do Firestore.';
+        window.__statusConexao.plantao = 'erro';
+        window.__statusConexao.plantaoErro = err.message;
+        window.__mostrarChecklistCarregamento();
       }
     }
     carregar();
